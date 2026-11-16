@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">YT Chat to XML</string>
+    <string name="url_hint">YouTube live / video link</string>
+    <string name="convert">Download chat as XML</string>
+    <string name="cancel">Cancel</string>
+    <string name="update_ytdlp">Update yt-dlp</string>
+</resources>
