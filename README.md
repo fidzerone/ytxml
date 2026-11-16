@@ -1,12 +1,13 @@
 # YT Chat to XML
 
 Small Android app. Paste a YouTube live or video link, and it saves **only the live chat**
-(no video, audio or subtitles) as a Niconico-style comment `.xml` in your Downloads folder.
+(no video, audio or subtitles) as a comment `.xml` in your Downloads folder, in the same format
+that JKCommentViewer writes.
 
 - Accepts `youtube.com/live/ID`, `youtube.com/watch?v=ID`, `youtu.be/ID`, or just the 11-character ID.
 - You can also use the YouTube app's **Share** button and pick this app.
 - Uses [youtubedl-android](https://github.com/yausername/youtubedl-android) (bundled yt-dlp) to fetch
-  `live_chat.json`, then converts it with a Kotlin port of `convert_chat_to_xml.py`.
+  `live_chat.json`, then converts it (Kotlin port of `convert_chat_to_xml.py`, extended to the JKCommentViewer format).
 - Output: `Downloads/<videoId>.xml`
 
 ## Get the APK
@@ -34,19 +35,22 @@ Or from a terminal with the Android SDK installed: `./gradlew assembleDebug`
 
 ## XML format
 
+Same layout as a JKCommentViewer export: UTF-8 with BOM, CRLF line endings, one indented
+`<chat>` per comment.
+
 ```xml
+<?xml version="1.0" encoding="UTF-8"?>
 <packet>
-<chat vpos="372300" no="1" user_id="Alice">comment text</chat>
+  <chat date="1730809943" user_id="UC..." id="" vpos="9673" mail="" premium="" user_name="Name" youtube_icon_url="https://..." youtube_sticker_url="" badge_image_url="" youtube_super_chat="false" new_sponsor="false" gift_send="false" gift_recv="false" sponsor="false" amount_text="" moderator="false" owner="false" verified="false" header_primary_text="" yt_text_0="Hello" yt_emojiId_0="" yt_emojiUrl_0="">Hello</chat>
 </packet>
 ```
 
-`vpos` is in 1/100 second from the start of the video.
-
-### Differences from `convert_chat_to_xml.py`
-- Handles every action in a chat line, not just the first one.
-- Emoji no longer crash the conversion (standard emoji are kept, custom emoji become `:shortcut:`).
-- `&` is escaped first, so `<` no longer ends up as `&amp;lt;`.
-- No extra spaces around the comment text.
-- `vpos` comes from the exact millisecond offset (falls back to the `H:MM:SS` text); negative offsets become 0.
-- Double-quoted attributes, matching the official Niconico format.
-- Like the original, only normal text messages are converted (Super Chats and other event types are skipped).
+- `date` is the Unix time in seconds; `vpos` is 1/100 second from the start of the video
+  (comments posted before the stream started get `0`).
+- Emoji appear in the comment text as `:shortcut:` names; `yt_emojiId_N` / `yt_emojiUrl_N` keep the
+  original emoji ID and image URL for each message run.
+- Besides normal comments it converts Super Chats, Super Stickers, new members / membership milestones
+  and membership gifts, with the matching flags set.
+- Verified by rebuilding the YouTube data of a real JKCommentViewer export and converting it back:
+  the result was byte-for-byte identical. Super Chat, sticker, owner and verified details were not in
+  that export, so those follow the most likely layout rather than a confirmed one.
